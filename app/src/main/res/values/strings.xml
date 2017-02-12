@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">AndroidBluetoothR1-0</string>
+    <string name="title_paired_devices">PAIRED DEVICES</string>
+    <string name="title_other_devices">DISCOVERED DEVICES</string>
+    <string name="button_scan">scan_btn</string>
+    <string name="no_device">No devices paired</string>
+    <string name="no_paired_devices">No paired devices found</string>
 </resources>
