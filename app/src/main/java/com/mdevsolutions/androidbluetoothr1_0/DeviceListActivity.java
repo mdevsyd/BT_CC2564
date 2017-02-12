@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Set;
 
@@ -31,6 +32,7 @@ public class DeviceListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.device_list);
         Button scanBtn = (Button)findViewById(R.id.button_scan);
+
         scanBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -39,13 +41,20 @@ public class DeviceListActivity extends AppCompatActivity {
                 v.setVisibility(View.GONE);
             }
         });
-
+        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        checkBtCompatible();
+        enableBt();
         // Setup up the two array adapters one for each type of device list. (paried and discovered).
         mPairedDevicesArrayAdapter = new ArrayAdapter(this, R.layout.device_name);
         mNewDevicesArrayAdapter = new ArrayAdapter(this, R.layout.device_name);
+
         ListView pairedListView = (ListView)findViewById(R.id.paired_devices);
-        pairedListView.setAdapter(mPairedDevicesArrayAdapter);
         ListView newDevicesListView = (ListView)findViewById(R.id.new_devices);
+
+        //obtain currently paired device list, if any, add them to the ArrayAdapter
+        //getPairedDevices();
+        pairedListView.setAdapter(mPairedDevicesArrayAdapter);
+
         newDevicesListView.setAdapter(mNewDevicesArrayAdapter);
         //set onlick listeners for both lists
         pairedListView.setOnItemClickListener(mDeviceClickListener);
@@ -56,10 +65,13 @@ public class DeviceListActivity extends AppCompatActivity {
         this.registerReceiver(mReceiver, filter);
 
         //get a local instance of the BT adapter
-        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        //obtain currently paired device list, if any, add them to the ArrayAdapter
-        Set <BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+
+    }
+
+    private Set<BluetoothDevice> getPairedDevices() {
+        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+        Log.d(Constants.DEBUG_TAG," pairedDevice LIst length = "+pairedDevices.size());
         if(pairedDevices.size()>0){
             findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             for (BluetoothDevice device : pairedDevices){
@@ -68,6 +80,22 @@ public class DeviceListActivity extends AppCompatActivity {
         }else{
             String noDev = getResources().getText(R.string.no_paired_devices).toString();
             mPairedDevicesArrayAdapter.add(noDev);
+        }
+        return pairedDevices;
+    }
+
+    private void enableBt() {
+        if (!mBtAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
+        }
+    }
+
+    private void checkBtCompatible() {
+        //check if BT is supported on host device
+        if (mBtAdapter == null) {
+            Toast.makeText(getApplicationContext(), "Your device does not support Bluetooth", Toast.LENGTH_LONG).show();
+            finish();
         }
     }
 
@@ -129,6 +157,17 @@ public class DeviceListActivity extends AppCompatActivity {
     };
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        getPairedDevices();
+        //enable BT on device
+//        if (!mBtAdapter.isEnabled()) {
+//            Intent enableBtIntent = new Intent(mBtAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
+//        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         // always cancel the discovery
@@ -137,5 +176,19 @@ public class DeviceListActivity extends AppCompatActivity {
         }
         //unregister listeners to the broadcasts
         this.unregisterReceiver(mReceiver);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        //check requestCode to know what requested the result
+        switch (requestCode) {
+            case Constants.REQUEST_ENABLE_BT:
+                if (resultCode == RESULT_OK) {
+                    Toast.makeText(getApplicationContext(), "Bluetooth successfully enabled.", Toast.LENGTH_LONG).show();
+                } else if (resultCode == RESULT_CANCELED) {
+                    Toast.makeText(getApplicationContext(), "Bluetooth enabling failed.", Toast.LENGTH_LONG).show();
+                }
+        }
     }
 }
