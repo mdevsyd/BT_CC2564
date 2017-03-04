@@ -27,6 +27,7 @@ public class DeviceListActivity extends AppCompatActivity {
     private ArrayAdapter mNewDevicesArrayAdapter;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,13 +38,13 @@ public class DeviceListActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startDiscovery();
-                // make the current view disappear
+                // make the current button disappear
                 v.setVisibility(View.GONE);
             }
         });
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         checkBtCompatible();
-        enableBt();
+        //enableBt();
         // Setup up the two array adapters one for each type of device list. (paried and discovered).
         mPairedDevicesArrayAdapter = new ArrayAdapter(this, R.layout.device_name);
         mNewDevicesArrayAdapter = new ArrayAdapter(this, R.layout.device_name);
@@ -52,7 +53,7 @@ public class DeviceListActivity extends AppCompatActivity {
         ListView newDevicesListView = (ListView)findViewById(R.id.new_devices);
 
         //obtain currently paired device list, if any, add them to the ArrayAdapter
-        //getPairedDevices();
+        getPairedDevices();
         pairedListView.setAdapter(mPairedDevicesArrayAdapter);
 
         newDevicesListView.setAdapter(mNewDevicesArrayAdapter);
@@ -64,7 +65,11 @@ public class DeviceListActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         this.registerReceiver(mReceiver, filter);
 
-        //get a local instance of the BT adapter
+        // register to receive broadcast when the discovery is finished
+        filter = new IntentFilter((BluetoothAdapter.ACTION_DISCOVERY_FINISHED));
+
+        // Set result CANCELED in case the user backs out - (from Android BT example)
+        setResult(Activity.RESULT_CANCELED);
 
 
     }
@@ -119,16 +124,19 @@ public class DeviceListActivity extends AppCompatActivity {
 
             //need to cancel the discovery as it is resource heavy
             mBtAdapter.cancelDiscovery();
-            //TODO finidh!!!
+
             // MAC hardware address of the device is the last 17 chars of the view
             String info = ((TextView) view).getText().toString();
             String address = info.substring(info.length() - 17);
+            String name = info.substring(0, info.length()-17);
             Log.d(Constants.DEBUG_TAG, "item was clicked " + address);
             //create intent including the hardware address
-            Intent intent = new Intent();
-            intent.putExtra(Constants.EXTRA_DEVICE_ADDRESS, address);
-            setResult(Activity.RESULT_OK, intent);
-            finish();
+
+            Intent viewDeviceIntent = new Intent(DeviceListActivity.this, SelectedDeviceActivity.class);
+            viewDeviceIntent.putExtra(Constants.EXTRA_DEVICE_ADDRESS, address);
+            viewDeviceIntent.putExtra(Constants.EXTRA_DEVICE_NAME, name);
+            startActivity(viewDeviceIntent);
+
         }
     };
 
@@ -144,27 +152,41 @@ public class DeviceListActivity extends AppCompatActivity {
                     mNewDevicesArrayAdapter.add(device.getName()+ "\n" +device.getAddress());
                 }
             }
-            else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
+            else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action) && mBtAdapter.isDiscovering()){
+
                 if (mNewDevicesArrayAdapter.getCount()==0){
                     //change display to show no devices were found
-                    String noDev = getResources().getText(R.string.no_device).toString();
+                    String noDev = getResources().getText(R.string.no_discovered_device).toString();
                     mNewDevicesArrayAdapter.add(noDev);
+                    mBtAdapter.cancelDiscovery();
                 }
+            Button scanBtn = (Button)findViewById(R.id.button_scan);
+            scanBtn.setVisibility(View.VISIBLE);
+            mBtAdapter.cancelDiscovery();
 
+            }
+            //someone switches off Bluetooth
+            else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)){
+                if(mBtAdapter.getState() == BluetoothAdapter.STATE_OFF){
+                    enableBt();
+                }
             }
 
         }
     };
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mReceiver);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        getPairedDevices();
         //enable BT on device
-//        if (!mBtAdapter.isEnabled()) {
-//            Intent enableBtIntent = new Intent(mBtAdapter.ACTION_REQUEST_ENABLE);
-//            startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
-//        }
+        enableBt();
+        //getPairedDevices();
     }
 
     @Override
