@@ -1,0 +1,206 @@
+package com.mdevsolutions.androidbluetoothr1_0;
+
+import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+
+import android.os.Handler;
+import android.os.Message;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.mdevsolutions.androidbluetoothr1_0.R;
+
+public class ChatActivity extends AppCompatActivity {
+
+    private BluetoothAdapter mBtAdapter;
+    private String mConnectedDevice = null;
+    private ListView mChatListView;
+
+    /**
+     * Array Adapter for chat
+     */
+    private ArrayAdapter<String> mChatArrayAdapter;
+
+    private EditText mOutEditText;
+    private Button mSendBtn;
+    //buffer for outgoing messages
+
+    /**
+     * String buffer for outgoing text
+     */
+    private StringBuffer mOutStringBuffer;
+
+
+    //TODO BT CHAT SERVICE MEMBER
+    private BluetoothChatService mChatService = null;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_chat);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        mOutEditText = (EditText) findViewById(R.id.textOutEt);
+        mSendBtn = (Button) findViewById(R.id.sendBtn);
+        mChatListView = (ListView)findViewById(R.id.chatLV);
+
+        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        String mLocalDevice = mBtAdapter.getName();
+
+        Intent intent = getIntent();
+        mConnectedDevice = intent.getStringExtra(Constants.EXTRA_DEVICE_NAME);
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //enable Bt if it is not on
+        if (!mBtAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, Constants.REQUEST_ENABLE_BT);
+            // Otherwise, setup the chat session
+        } else if (mChatService == null) {
+            setupChat();
+        }
+    }
+
+    private void setupChat() {
+
+        //initialise array adapter and set it to the listview
+        mChatArrayAdapter = new ArrayAdapter<String>(this,R.layout.activity_chat);
+        mChatListView.setAdapter(mChatArrayAdapter);
+
+        //Initialise the edit text and make alistener for when user hits the return key when finished typing text
+        mOutEditText.setOnEditorActionListener(mWriteListener);
+
+        //Initialise the send button with on click listener
+        mSendBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //send message including what user has typed into the edit text
+                //TODO what if this s empty?
+                String message = mOutEditText.getText().toString();
+                sendMessage(message);
+            }
+        });
+
+        // Initialise tge BluetoothChatService for BT connections TODO make mHandler
+        mChatService = new BluetoothChatService(this, mHandler);
+
+        // Initialise the String buffer
+        mOutStringBuffer = new StringBuffer("");
+
+    }
+
+    /**
+     * An action listener for the text out edit text. this listens for return key
+     */
+    private TextView.OnEditorActionListener mWriteListener = new TextView.OnEditorActionListener(){
+
+        @Override
+        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+            if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_UP) {
+                String message = v.getText().toString();
+                sendMessage(message);
+            }
+            return true;
+        }
+    };
+
+    /**
+     * Sends a message from one device to the other
+     * @param message - the String of text taken from user input
+     */
+    private void sendMessage(String message) {
+        //TODO allow for this!
+
+        //TODO this needs to be written after ChatService is written
+        //Check we are connected to chat service
+//        if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED){
+//
+//        }
+    }
+
+    /**
+     * Hndler to handle mesages back from the BluetoothChat Service
+     */
+    private final Handler mHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch(msg.what){
+                case Constants.MESSAGE_STATE_CHANGE:
+                    // Update the status by switching on arg1 --> state of BluetoothChatService
+                    switch(msg.arg1){
+                        case BluetoothChatService.STATE_CONNECTED:
+                            setStatus(getString(R.string.title_connected)+" "+mConnectedDevice);
+                            //TODO if the getString doesn't work try getString(int, object)
+                            mChatArrayAdapter.clear();
+                            break;
+                        case BluetoothChatService.STATE_CONNECTING:
+                            setStatus(getString(R.string.title_connecting));
+                            break;
+                        case BluetoothChatService.STATE_LISTEN:
+                            //we are listening for a connection in the background
+                            break;
+                        case BluetoothChatService.STATE_NONE:
+                            setStatus(getString(R.string.title_disconnected));
+                            break;
+                    }
+                    break;
+                case Constants.MESSAGE_WRITE:
+                    byte[] writeBuffer = (byte[]) msg.obj;
+                    String writeMessage = new String(writeBuffer);
+                    //add the message to the listView adapter
+                    mChatArrayAdapter.add("Me:  " + writeMessage);
+                    break;
+                case Constants.MESSAGE_READ:
+                    byte[] readBuffer = (byte[]) msg.obj;
+                    String readMeassege = new String(readBuffer);
+                    mChatArrayAdapter.add(mConnectedDevice +":  " + readMeassege);
+                    break;
+
+            }
+        }
+    };
+
+    /**
+     * Update the BluetoothChatService Status on action bar
+     */
+    private void setStatus(int resId){
+        final android.app.ActionBar actionBar = getActionBar();
+        //ensure there is an actionbar in the activity
+        if (null == actionBar){
+            return;
+        }
+        actionBar.setSubtitle(resId);
+    }
+
+    private void setStatus(CharSequence charSeq){
+        final android.app.ActionBar actionBar = getActionBar();
+        //ensure there is an actionbar in the activity
+        if (null == actionBar){
+            return;
+        }
+        actionBar.setSubtitle(charSeq);
+    }
+}
