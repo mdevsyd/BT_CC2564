@@ -9,4 +9,11 @@
     <string name="device_name">Device Name</string>
     <string name="device_address">Device Address</string>
     <string name="connect_button">CONNECT</string>
+    <string name="title_activity_chat">ChatActivity</string>
+    <string name="send">SEND</string>
+    <string name="discoverable">Your device will be discoverable for 2 mins</string>
+    <string name="title_connected">You are connected to </string>
+    <string name="title_connecting">Attempting connection</string>
+    <string name="title_disconnected">You are not connected</string>
+
 </resources>
