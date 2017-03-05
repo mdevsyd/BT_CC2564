@@ -17,7 +17,8 @@ public class Constants {
     public static final String DEBUG_TAG = "debug";
 
     public static final int REQUEST_ENABLE_BT = 100;
-    public static final int REQUEST_CONNECT_DEVICE = 200;
+    public static final int REQUEST_CONNECT_DEVICE_SECURE = 200;
+    public static final int REQUEST_CONNECT_DEVICE_INSECURE = 300;
 
     // Messages sent from BT chat service handler
     public static final int MESSAGE_STATE_CHANGE = 1;

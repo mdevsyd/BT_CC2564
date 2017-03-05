@@ -15,5 +15,6 @@
     <string name="title_connected">You are connected to </string>
     <string name="title_connecting">Attempting connection</string>
     <string name="title_disconnected">You are not connected</string>
+    <string name="not_connected">You are not connected to any device!</string>
 
 </resources>

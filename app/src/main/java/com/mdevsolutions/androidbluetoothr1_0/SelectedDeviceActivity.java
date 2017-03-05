@@ -37,8 +37,9 @@ public class SelectedDeviceActivity extends AppCompatActivity {
             public void onClick(View v) {
                 checkDiscoverable();
                 Intent intent = new Intent(SelectedDeviceActivity.this, ChatActivity.class);
-                // pass the device name to the chat activity
+                // pass the device name and MAC address to the chat activity
                 intent.putExtra(Constants.EXTRA_DEVICE_NAME, mName);
+                intent.putExtra(Constants.EXTRA_DEVICE_ADDRESS, mAddress);
                 startActivity(intent);
                 finish();
 

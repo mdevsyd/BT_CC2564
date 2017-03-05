@@ -209,7 +209,8 @@ public class DeviceListActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK) {
                     Toast.makeText(getApplicationContext(), "Bluetooth successfully enabled.", Toast.LENGTH_LONG).show();
                 } else if (resultCode == RESULT_CANCELED) {
-                    Toast.makeText(getApplicationContext(), "Bluetooth enabling failed.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Bluetooth enabling failed. Exiting.", Toast.LENGTH_LONG).show();
+                    finish();
                 }
         }
     }
