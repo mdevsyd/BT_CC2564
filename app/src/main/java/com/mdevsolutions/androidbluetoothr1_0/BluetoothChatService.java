@@ -4,16 +4,18 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 
 /**
+ * This is the class that sets up and manages all BT connections with other devices.
+ *
  * Created by Michi on 14/02/2017.
  */
 
 public class BluetoothChatService {
-
+    // fields
     private final int mState;
     private final int mNewState;
-
     private BluetoothAdapter mBtAdapter;
     private final Handler mHandler;
 
@@ -29,6 +31,8 @@ public class BluetoothChatService {
         mNewState = mState;
         mHandler = handler;
     }
+
+
 
     public void stop() {
     }
@@ -48,6 +52,7 @@ public class BluetoothChatService {
     }
 
     public void connect(BluetoothDevice device) {
+        Log.d(Constants.DEBUG_TAG,"BluetoothChatService connectDevice ");
     }
 
 

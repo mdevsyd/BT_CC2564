@@ -30,9 +30,12 @@ public class DeviceListActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(Constants.DEBUG_TAG,"DeviceListActivity onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.device_list);
         Button scanBtn = (Button)findViewById(R.id.button_scan);
+
+        setResult(Activity.RESULT_CANCELED);
 
         scanBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -49,16 +52,14 @@ public class DeviceListActivity extends AppCompatActivity {
         mPairedDevicesArrayAdapter = new ArrayAdapter(this, R.layout.device_name);
         mNewDevicesArrayAdapter = new ArrayAdapter(this, R.layout.device_name);
 
-        ListView pairedListView = (ListView)findViewById(R.id.paired_devices);
-        ListView newDevicesListView = (ListView)findViewById(R.id.new_devices);
 
         //obtain currently paired device list, if any, add them to the ArrayAdapter
-        getPairedDevices();
+        ListView pairedListView = (ListView)findViewById(R.id.paired_devices);
         pairedListView.setAdapter(mPairedDevicesArrayAdapter);
-
-        newDevicesListView.setAdapter(mNewDevicesArrayAdapter);
-        //set onlick listeners for both lists
         pairedListView.setOnItemClickListener(mDeviceClickListener);
+
+        ListView newDevicesListView = (ListView)findViewById(R.id.new_devices);
+        newDevicesListView.setAdapter(mNewDevicesArrayAdapter);
         newDevicesListView.setOnItemClickListener(mDeviceClickListener);
 
         //register to receive broadcasts when a device is found
@@ -67,14 +68,15 @@ public class DeviceListActivity extends AppCompatActivity {
 
         // register to receive broadcast when the discovery is finished
         filter = new IntentFilter((BluetoothAdapter.ACTION_DISCOVERY_FINISHED));
+        this.registerReceiver(mReceiver,filter);
 
-        // Set result CANCELED in case the user backs out - (from Android BT example)
-        setResult(Activity.RESULT_CANCELED);
+        getPairedDevices();
 
 
     }
 
     private Set<BluetoothDevice> getPairedDevices() {
+        Log.d(Constants.DEBUG_TAG, "DeviceListActivity, getPairedDevices() method call");
         Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
         Log.d(Constants.DEBUG_TAG," pairedDevice LIst length = "+pairedDevices.size());
         if(pairedDevices.size()>0){
@@ -90,6 +92,7 @@ public class DeviceListActivity extends AppCompatActivity {
     }
 
     private void enableBt() {
+        Log.d(Constants.DEBUG_TAG, "DeviceListActivity, enableBt() method call");
         if (!mBtAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
@@ -97,6 +100,7 @@ public class DeviceListActivity extends AppCompatActivity {
     }
 
     private void checkBtCompatible() {
+        Log.d(Constants.DEBUG_TAG, "DeviceListActivity, checkBtCompatible() method call");
         //check if BT is supported on host device
         if (mBtAdapter == null) {
             Toast.makeText(getApplicationContext(), "Your device does not support Bluetooth", Toast.LENGTH_LONG).show();
@@ -105,6 +109,7 @@ public class DeviceListActivity extends AppCompatActivity {
     }
 
     private void startDiscovery() {
+        Log.d(Constants.DEBUG_TAG, "DeviceListActivity, startDiscovery() method call");
         findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
         //TODO Progress bar of some sort
         //cancel any current discoveries if any exist
@@ -135,6 +140,7 @@ public class DeviceListActivity extends AppCompatActivity {
             Intent viewDeviceIntent = new Intent(DeviceListActivity.this, SelectedDeviceActivity.class);
             viewDeviceIntent.putExtra(Constants.EXTRA_DEVICE_ADDRESS, address);
             viewDeviceIntent.putExtra(Constants.EXTRA_DEVICE_NAME, name);
+            viewDeviceIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(viewDeviceIntent);
 
         }
@@ -177,12 +183,14 @@ public class DeviceListActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
+        Log.d(Constants.DEBUG_TAG, "DeviceListActivity,  onPause()");
         super.onPause();
         unregisterReceiver(mReceiver);
     }
 
     @Override
     protected void onResume() {
+        Log.d(Constants.DEBUG_TAG, "DeviceListActivity, onResume() method call");
         super.onResume();
         //enable BT on device
         enableBt();
@@ -191,6 +199,7 @@ public class DeviceListActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Log.d(Constants.DEBUG_TAG, "DeviceListActivity, onResume() method call");
         super.onDestroy();
         // always cancel the discovery
         if (mBtAdapter !=null) {

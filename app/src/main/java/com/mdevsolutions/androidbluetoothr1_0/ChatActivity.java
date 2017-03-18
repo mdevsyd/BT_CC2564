@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -47,6 +48,7 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(Constants.DEBUG_TAG, "ChatActivity onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
        // Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -71,6 +73,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void connectDevice(String address, boolean secure) {
+        Log.d(Constants.DEBUG_TAG,"connectDevice-->" + address);
         BluetoothDevice device = mBtAdapter.getRemoteDevice(address);
         mChatService.connect(device);
     }
@@ -80,7 +83,7 @@ public class ChatActivity extends AppCompatActivity {
      */
     @Override
     protected void onStart() {
-
+        Log.d(Constants.DEBUG_TAG,"ChatActivity, onStart()");
         super.onStart();
         //enable Bt if it is not on
         if (!mBtAdapter.isEnabled()) {
@@ -98,6 +101,7 @@ public class ChatActivity extends AppCompatActivity {
      */
     @Override
     protected void onDestroy() {
+        Log.d(Constants.DEBUG_TAG,"ChatActivity, onDestroy()");
         super.onDestroy();
         if (mChatService != null){
             mChatService.stop();
@@ -111,6 +115,7 @@ public class ChatActivity extends AppCompatActivity {
      */
     @Override
     protected void onResume() {
+        Log.d(Constants.DEBUG_TAG,"ChatActivity, onResume()");
         super.onResume();
         if (mChatService != null){
             if (mChatService.getState() == BluetoothChatService.STATE_NONE){
@@ -138,6 +143,7 @@ public class ChatActivity extends AppCompatActivity {
 
 
     private void setupChat() {
+        Log.d(Constants.DEBUG_TAG,"ChatActivity, setupChat() method call");
 
         //initialise array adapter and set it to the listview
         mChatArrayAdapter = new ArrayAdapter<String>(this,R.layout.activity_chat);

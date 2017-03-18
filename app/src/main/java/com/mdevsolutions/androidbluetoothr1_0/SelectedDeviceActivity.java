@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,7 +42,8 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                 intent.putExtra(Constants.EXTRA_DEVICE_NAME, mName);
                 intent.putExtra(Constants.EXTRA_DEVICE_ADDRESS, mAddress);
                 startActivity(intent);
-                finish();
+                Log.d(Constants.DEBUG_TAG,"SelectedDeviceActivity, CONNECT clicked --> go to ChatActivity");
+
 
             }
         });
@@ -56,6 +58,7 @@ public class SelectedDeviceActivity extends AppCompatActivity {
      * Makes device discoverable for 120 seconds
      */
     private void checkDiscoverable() {
+        Log.d(Constants.DEBUG_TAG, "checkDiscoverable()");
         if(mBtAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE){
             Intent discoverableDeviceIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableDeviceIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120);

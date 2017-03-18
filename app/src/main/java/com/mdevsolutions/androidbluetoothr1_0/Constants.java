@@ -12,6 +12,7 @@ public class Constants {
     public static final String EXTRA_DEVICE_NAME = "device_name";
     public static final String LOCAL_DEVICE_NAME = "local_device_name";
     public static final UUID MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    public static final UUID SECURE_UUID = UUID.fromString("1f940d0e-017e-11e7-93ae-92361f002671");
 
 
     public static final String DEBUG_TAG = "debug";
